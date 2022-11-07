@@ -1,35 +1,48 @@
-from turtle import Turtle
+from turtle import Screen
+from snake import Snake
+import time
+from food import Food
+from scoreboard import Scoreboard
 
-ALIGNMENT = "center"
-FONT = ("Helvetica", 18, 'normal')
+screen = Screen()
+screen.setup(width=600, height=600)
+screen.bgcolor("black")
+screen.title("SnAkE GaMe")
+screen.tracer(0)
 
+snake = Snake()
+food = Food()
+score = Scoreboard()
 
-class Scoreboard(Turtle):
-    def __init__(self):
-        super().__init__()
-        self.color("white")
-        self.score = 0
-        with open("data.txt", "r") as data:
-            self.high_score = int(data.read())
-        self.hideturtle()
-        self.penup()
-        self.goto((0, 270))
-        self.pendown()
-        self.update_scoreboard()
+screen.listen()
+screen.onkey(fun=snake.up, key="Up")
+screen.onkey(fun=snake.down, key="Down")
+screen.onkey(fun=snake.right, key="Right")
+screen.onkey(fun=snake.left, key="Left")
 
-    def update_scoreboard(self):
-        self.clear()
-        self.write(f"Score: {self.score} High Score {self.high_score}", align=ALIGNMENT, font=FONT)
+game_is_on = True
 
-    def increase_score(self):
-        self.score += 1
-        self.clear()
-        self.update_scoreboard()
+while game_is_on:
+    screen.update()
+    time.sleep(0.1)
+    snake.move()
 
-    def reset(self):
-        if self.score > self.high_score:
-            self.high_score = self.score
-            with open("data.txt", "w") as data:
-                data.write(f"{self.high_score}")
-        self.score = 0
-        self.update_scoreboard()
+    # detect collision with food
+    if snake.head.distance(food) < 15:
+        food.refresh()
+        snake.extend()
+        score.increase_score()
+
+    # Detect collision with wall
+    if snake.head.xcor() > 290 or snake.head.xcor() < -290 or snake.head.ycor() > 290 or snake.head.ycor() < -290:
+        score.reset()
+        snake.reset()
+
+    # Detect Collision with tail
+    for segment in snake.segments[1:]:
+        if snake.head.distance(segment) < 10:
+            score.reset()
+            snake.reset()
+        elif segment == snake.head:
+            pass
+
